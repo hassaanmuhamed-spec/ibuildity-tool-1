@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iBuildity — حاسبة تكلفة التشطيب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#1a5f7a;--brand-light:#e8f4f8;--brand-mid:#2d8bba;--brand-dark:#0d3d52;
+  --gold:#c9a84c;--gold-light:#fdf6e3;--gold-dark:#7a5f1a;
+  --green:#1d9e75;--green-light:#e1f5ee;
+  --surface:#fff;--surface2:#f4f7fa;--surface3:#eaeff5;
+  --border:#dde4ed;--border2:#c8d3e0;
+  --text1:#0f1923;--text2:#4a5568;--text3:#8a94a6;
+  --r:14px;--rsm:9px;
+  --sh:0 2px 12px rgba(15,25,35,.07);--shlg:0 8px 32px rgba(15,25,35,.12);
+  --tr:all .25s cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:var(--surface2);color:var(--text1);min-height:100vh}
+
+.topbar{background:var(--brand-dark);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:36px;height:36px;background:var(--brand-mid);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:20px;height:20px}
+.brand{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.brand em{color:var(--gold);font-style:normal}
+.topbar-tag{background:rgba(255,255,255,.12);color:rgba(255,255,255,.75);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.18)}
+
+.hero{background:linear-gradient(145deg,#0a2d40 0%,var(--brand-dark) 55%,#1a5f7a 100%);padding:44px 20px 50px;text-align:center;position:relative;overflow:hidden}
+.hero::before,.hero::after{content:'';position:absolute;border-radius:50%;pointer-events:none}
+.hero::before{top:-70px;left:-70px;width:300px;height:300px;background:radial-gradient(circle,rgba(45,139,186,.22) 0%,transparent 70%)}
+.hero::after{bottom:-50px;right:-50px;width:220px;height:220px;background:radial-gradient(circle,rgba(201,168,76,.18) 0%,transparent 70%)}
+.hero-inner{position:relative;z-index:1;max-width:640px;margin:0 auto}
+.hero-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.82);font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;margin-bottom:18px}
+.hero h1{font-size:28px;font-weight:800;color:#fff;margin-bottom:10px;line-height:1.3}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:14px;color:rgba(255,255,255,.6);max-width:480px;margin:0 auto}
+.hero-stats{display:flex;justify-content:center;gap:32px;margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1)}
+.hs{text-align:center}
+.hs-val{font-size:20px;font-weight:800;color:#fff}
+.hs-lbl{font-size:11px;color:rgba(255,255,255,.48);margin-top:1px}
+
+.app{max-width:880px;margin:0 auto;padding:24px 16px 60px}
+
+.prog-wrap{margin-bottom:18px}
+.prog-bar{height:4px;background:var(--surface3);border-radius:2px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-mid));border-radius:2px;transition:width .5s}
+.prog-lbl{font-size:11px;color:var(--text3);margin-top:5px;text-align:left}
+
+.stepper{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 20px;margin-bottom:20px;display:flex;box-shadow:var(--sh)}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;position:relative}
+.step-item:not(:last-child)::after{content:'';position:absolute;left:-1px;top:14px;width:100%;height:2px;background:var(--border);z-index:0}
+.step-item.done:not(:last-child)::after{background:var(--green)}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--surface3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3);position:relative;z-index:1;transition:var(--tr)}
+.step-lbl{font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap}
+.step-item.active .step-num{background:var(--brand);border-color:var(--brand);color:#fff}
+.step-item.active .step-lbl{color:var(--brand)}
+.step-item.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step-item.done .step-lbl{color:var(--green)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px;box-shadow:var(--sh);animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card-hd{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.card-ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-ic svg{width:20px;height:20px}
+.card-title{font-size:15px;font-weight:700;color:var(--text1)}
+.card-desc{font-size:12px;color:var(--text3);margin-top:1px}
+
+.fg{display:grid;gap:14px}
+.c2{grid-template-columns:1fr 1fr}
+.c3{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:12px;font-weight:700;color:var(--text2)}
+.field input,.field select{width:100%;height:42px;padding:0 14px;border:1px solid var(--border2);border-radius:var(--rsm);font-family:'Cairo',sans-serif;font-size:14px;color:var(--text1);background:var(--surface);transition:var(--tr);outline:none;-webkit-appearance:none;appearance:none}
+.field input:focus,.field select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,95,122,.12)}
+.field input[readonly]{background:var(--surface2);color:var(--text3)}
+.sw{position:relative}
+.sw select{padding-left:30px}
+.sw::after{content:'';position:absolute;left:11px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text3);pointer-events:none}
+
+.floor-panel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:16px;margin-top:12px}
+.fp-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fp-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--brand);border-radius:2px}
+.floor-badge{display:inline-flex;align-items:center;gap:5px;background:var(--brand-light);color:var(--brand-dark);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:10px}
+.fdivider{height:1px;background:var(--border);margin:12px 0}
+
+.ctr-list{display:flex;flex-direction:column;gap:10px}
+.ctr-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);transition:var(--tr)}
+.ctr-row:hover{border-color:var(--border2);background:var(--surface)}
+.ctr-info{display:flex;flex-direction:column;gap:1px}
+.ctr-name{font-size:14px;font-weight:600;color:var(--text1)}
+.ctr-sub{font-size:11px;color:var(--text3)}
+.ctr{display:flex;align-items:center;gap:14px}
+.cbtn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text1);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr);font-family:'Cairo',sans-serif;line-height:1}
+.cbtn:hover{background:var(--brand);border-color:var(--brand);color:#fff}
+.cval{font-size:18px;font-weight:800;color:var(--text1);min-width:24px;text-align:center}
+
+.qgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.qcard{padding:16px 8px 14px;border:1.5px solid var(--border2);border-radius:var(--rsm);text-align:center;cursor:pointer;transition:var(--tr);background:var(--surface)}
+.qcard:hover{border-color:var(--brand-mid);transform:translateY(-2px);box-shadow:var(--sh)}
+.qcard.active{border-color:var(--brand);background:var(--brand-light);transform:translateY(-2px);box-shadow:0 4px 16px rgba(26,95,122,.18)}
+.qcard.gold-a{border-color:var(--gold);background:var(--gold-light);transform:translateY(-2px);box-shadow:0 4px 16px rgba(201,168,76,.25)}
+.q-emoji{font-size:26px;margin-bottom:8px;display:block}
+.q-name{font-size:13px;font-weight:700;color:var(--text1)}
+.q-range{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.5}
+.qdesc{margin-top:14px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);font-size:13px;color:var(--text2);line-height:1.8}
+
+.chip-group{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 15px;border:1px solid var(--border2);border-radius:22px;font-size:13px;font-weight:600;font-family:'Cairo',sans-serif;cursor:pointer;background:var(--surface);color:var(--text2);transition:var(--tr);white-space:nowrap}
+.chip:hover{border-color:var(--brand-mid);color:var(--brand);background:var(--brand-light)}
+.chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.chip.gchip.active{background:var(--gold);border-color:var(--gold);color:#3a2800}
+
+.ws-title{font-size:12px;font-weight:700;color:var(--text2);margin:16px 0 10px;padding-right:10px;border-right:3px solid var(--brand-mid);direction:rtl}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;margin-bottom:4px}
+.wi{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--rsm);cursor:pointer;transition:var(--tr);background:var(--surface)}
+.wi:hover{background:var(--brand-light);border-color:var(--brand-mid)}
+.wi.active{background:var(--brand-light);border-color:var(--brand)}
+.wchk{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+.wi.active .wchk{background:var(--brand);border-color:var(--brand)}
+.wchk svg{width:11px;height:11px;stroke:#fff;stroke-width:2.5;fill:none;opacity:0;transition:var(--tr)}
+.wi.active .wchk svg{opacity:1}
+.wname{font-size:12px;font-weight:600;color:var(--text2)}
+.wi.active .wname{color:var(--brand-dark)}
+.wicon{font-size:14px;flex-shrink:0}
+
+.btn-row{display:flex;gap:10px;margin-top:6px}
+.btn{height:46px;padding:0 26px;border-radius:var(--rsm);font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:var(--tr);border:none;display:flex;align-items:center;gap:8px}
+.btn-p{background:var(--brand);color:#fff;flex:1;justify-content:center}
+.btn-p:hover{background:var(--brand-dark)}
+.btn-o{background:var(--surface);border:1px solid var(--border2);color:var(--text2)}
+.btn-o:hover{background:var(--surface3)}
+.btn-g{background:var(--gold);color:#2c1a00;flex:1;justify-content:center}
+.btn-g:hover{background:#b89040}
+
+.result-hero{background:linear-gradient(135deg,var(--brand-dark) 0%,#163f54 70%,#0a2d40 100%);border-radius:var(--r);padding:28px 24px;margin-bottom:18px;text-align:center;position:relative;overflow:hidden;box-shadow:var(--shlg)}
+.result-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(45,139,186,.2) 0%,transparent 70%);border-radius:50%}
+.ri{position:relative;z-index:1}
+.rl{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:8px}
+.ra{font-size:36px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.rs{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
+.rr{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);font-size:13px;font-weight:600;padding:6px 16px;border-radius:20px;margin-top:14px}
+
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:16px 14px;text-align:center;box-shadow:var(--sh)}
+.mv{font-size:18px;font-weight:800;color:var(--text1);margin-bottom:4px}
+.ml{font-size:11px;color:var(--text3);font-weight:600}
+
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px;box-shadow:var(--sh)}
+.chart-layout{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.pie-wrap{flex-shrink:0;position:relative}
+.pie-legend{flex:1;min-width:180px;display:flex;flex-direction:column;gap:9px}
+.leg-item{display:flex;align-items:center;gap:9px}
+.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.leg-name{font-size:12px;font-weight:600;color:var(--text2);flex:1}
+.leg-pct{font-size:12px;font-weight:700;color:var(--text1)}
+.leg-amt{font-size:11px;color:var(--text3)}
+
+.bc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px;box-shadow:var(--sh)}
+.sec-title{font-size:14px;font-weight:700;color:var(--text1);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.sec-acc{display:inline-block;width:3px;height:16px;background:var(--brand);border-radius:2px}
+.bar-row{margin-bottom:13px}
+.bar-row:last-child{margin-bottom:0}
+.bar-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.bar-name{font-size:13px;font-weight:600;color:var(--text2)}
+.bar-amt{font-size:13px;font-weight:700;color:var(--text1)}
+.bar-track{height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.bar-pct{font-size:10px;color:var(--text3);margin-top:2px;text-align:left}
+
+.spec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:14px}
+.stags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.stag{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.tb{background:var(--brand-light);color:var(--brand-dark)}
+.tg{background:var(--gold-light);color:var(--gold-dark)}
+.ts{background:var(--green-light);color:#085041}
+
+.note-box{background:#fffbeb;border:1px solid #f0d080;border-radius:var(--rsm);padding:14px 16px;font-size:12px;color:#5a4000;line-height:1.8;margin-top:14px;display:flex;gap:10px;align-items:flex-start}
+
+.lead-card{background:linear-gradient(135deg,#0d3d52 0%,#1a5f7a 100%);border-radius:var(--r);padding:26px 24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--shlg)}
+.lead-card::before{content:'';position:absolute;top:-50px;left:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(201,168,76,.18) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.lead-inner{position:relative;z-index:1}
+.lead-hd{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+.lead-ic{width:46px;height:46px;border-radius:12px;background:rgba(201,168,76,.2);border:1px solid rgba(201,168,76,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lead-ic svg{width:22px;height:22px}
+.lead-title{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.lead-sub{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6}
+.lead-benefits{display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.lead-ben{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.7)}
+.lead-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.lfield{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.lfield label{font-size:12px;font-weight:700;color:rgba(255,255,255,.75)}
+.lfield input{width:100%;height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.2);border-radius:var(--rsm);font-family:'Cairo',sans-serif;font-size:14px;color:#fff;background:rgba(255,255,255,.1);outline:none;transition:var(--tr)}
+.lfield input::placeholder{color:rgba(255,255,255,.35)}
+.lfield input:focus{border-color:var(--gold);background:rgba(255,255,255,.15);box-shadow:0 0 0 3px rgba(201,168,76,.2)}
+.lreq{color:var(--gold)}
+.lgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lgrid2 .lfield{margin-bottom:0}
+.btn-lead{width:100%;height:48px;margin-top:14px;background:var(--gold);color:#2c1a00;border:none;border-radius:var(--rsm);font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-lead:hover{background:#dbb84e}
+.btn-lead:disabled{opacity:.6;cursor:not-allowed}
+.lead-priv{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-top:10px}
+.lead-ok{text-align:center;padding:28px 16px;background:rgba(29,158,117,.15);border:1px solid rgba(29,158,117,.3);border-radius:var(--rsm);color:#fff}
+.lead-ok-icon{font-size:44px;margin-bottom:12px}
+.lead-ok-title{font-size:18px;font-weight:800;margin-bottom:6px}
+.lead-ok-sub{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6}
+.lead-err{font-size:12px;color:#fca5a5;margin-top:8px;text-align:center}
+
+footer{background:var(--brand-dark);color:rgba(255,255,255,.45);text-align:center;padding:22px;font-size:12px;margin-top:40px}
+footer .fb{font-size:15px;font-weight:800;color:#fff;margin-bottom:4px}
+footer .fb em{color:var(--gold);font-style:normal}
+
+.hidden{display:none!important}
+.fade-in{animation:slideUp .35s ease}
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+@media(max-width:640px){
+  .hero h1{font-size:21px}.hero-stats{gap:14px}
+  .qgrid{grid-template-columns:repeat(2,1fr)}
+  .c2,.c3{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+  .chart-layout{flex-direction:column;align-items:center}
+  .lgrid2{grid-template-columns:1fr}
+}
+
+.wi.locked{opacity:.45;cursor:not-allowed;background:var(--surface3)!important;border-color:var(--border)!important;position:relative}
+.wi.locked .wchk{background:var(--surface3)!important;border-color:var(--border2)!important}
+.wi.locked::after{content:'🔒';position:absolute;top:5px;left:8px;font-size:10px}
+.wi.locked .wname{color:var(--text3)!important}
+.economy-note{display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:var(--rsm);padding:10px 14px;font-size:12px;color:#7a5000;margin-bottom:12px;align-items:center;gap:8px}
+.economy-note.visible{display:flex}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="logo" href="https://www.ibuildity.com" target="_blank" rel="noopener">
+    <span class="brand">i<em>BUILD</em>ity</span>
+  </a>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="https://www.ibuildity.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6);font-size:11px;font-weight:600;text-decoration:none;letter-spacing:.03em">🌐 www.ibuildity.com</a>
+    <div class="topbar-tag">حاسبة التشطيب المجانية</div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-chip">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      iBuildity — تقدير احترافي للتشطيب
+    </div>
+    <h1>احسب تكلفة <em>تشطيب وحدتك</em> بدقة</h1>
+    <p>تقدير شامل بناءً على المقايسات التنفيذية الفعلية — خامات، جودة، طراز، وموقع</p>
+    <div class="hero-stats">
+      <div class="hs"><div class="hs-val">4</div><div class="hs-lbl">مستويات جودة</div></div>
+      <div class="hs"><div class="hs-val">15+</div><div class="hs-lbl">بند تنفيذي</div></div>
+      <div class="hs"><div class="hs-val">6</div><div class="hs-lbl">أنواع وحدات</div></div>
+      <div class="hs"><div class="hs-val">مجاني</div><div class="hs-lbl">بالكامل</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="prog-wrap">
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:25%"></div></div>
+    <div class="prog-lbl" id="prog-lbl">الخطوة ١ من ٤ — بيانات الوحدة</div>
+  </div>
+  <div class="stepper">
+    <div class="step-item active" id="sn1" onclick="goStep(1)"><div class="step-num">١</div><div class="step-lbl">الوحدة</div></div>
+    <div class="step-item" id="sn2" onclick="goStep(2)"><div class="step-num">٢</div><div class="step-lbl">الجودة</div></div>
+    <div class="step-item" id="sn3" onclick="goStep(3)"><div class="step-num">٣</div><div class="step-lbl">الأعمال</div></div>
+    <div class="step-item" id="sn4" onclick="goStep(4);if(document.getElementById('result-area').innerHTML==='')calculate()"><div class="step-num">٤</div><div class="step-lbl">النتيجة</div></div>
+  </div>
+
+  <!-- ══ STEP 1 ══ -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-ic" style="background:#e8f4f8"><svg viewBox="0 0 24 24" fill="none" stroke="#1a5f7a" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div><div class="card-title">بيانات الوحدة والموقع</div><div class="card-desc">حدد نوع العقار والمنطقة للحصول على تقدير دقيق</div></div>
+      </div>
+      <div class="fg c2" style="margin-bottom:14px">
+        <div class="field"><label>نوع الوحدة</label><div class="sw"><select id="unit-type" onchange="onUnitChange()">
+          <option value="apartment">🏢 شقة سكنية</option>
+          <option value="duplex">🏠 دوبلكس (دورين)</option>
+          <option value="villa">🏡 فيلا (أكثر من دورين)</option>
+          <option value="studio">🛋 ستوديو</option>
+          <option value="office">🏢 وحدة إدارية / مكتب</option>
+          <option value="commercial">🏪 وحدة تجارية / محل</option>
+        </select></div></div>
+        <div class="field"><label>الموقع / المنطقة</label><div class="sw"><select id="location">
+          <option value="premium">⭐ راقية جداً</option>
+          <option value="high">🔵 راقية</option>
+          <option value="mid" selected>🟡 متوسطة</option>
+          <option value="standard">⚪ عادية</option>
+        </select></div></div>
+      </div>
+      <div class="field" style="margin-bottom:14px"><label>وضع التشطيب الحالي</label><div class="sw"><select id="cur-state">
+        <option value="redbrick">🧱 طوب أحمر بدون تأسيس (من الصفر تماماً)</option>
+        <option value="bare">🏗 عظم — هيكل خرساني مع تأسيس</option>
+        <option value="semi">🔧 نصف تشطيب — بياض وكهرباء أولي</option>
+        <option value="old">🔄 تشطيب قديم — يحتاج تجديد كامل</option>
+        <option value="partial">✏️ تشطيب جزئي — يحتاج استكمال</option>
+      </select></div></div>
+
+      <!-- شقة / ستوديو -->
+      <div id="sec-single"><div class="field"><label>المساحة الإجمالية (م²)</label><input type="number" id="area-single" value="150" min="30" max="5000"></div></div>
+
+      <!-- دوبلكس -->
+      <div id="sec-duplex" class="hidden">
+        <div class="floor-panel">
+          <div class="fp-title">مساحة كل دور على حدة</div>
+          <div class="floor-badge">الدور الأرضي</div>
+          <div class="fg c2" style="margin-bottom:12px">
+            <div class="field"><label>المساحة (م²)</label><input type="number" id="d1a" value="200" min="20" oninput="calcDup()"></div>
+            <div class="field"><label>الاستخدام</label><div class="sw"><select><option>مختلط</option><option>ريسبشن وصالة</option><option>خدمات</option></select></div></div>
+          </div>
+          <div class="fdivider"></div>
+          <div class="floor-badge">الدور الأول</div>
+          <div class="fg c2">
+            <div class="field"><label>المساحة (م²)</label><input type="number" id="d2a" value="180" min="20" oninput="calcDup()"></div>
+            <div class="field"><label>الاستخدام</label><div class="sw"><select><option>مختلط</option><option>نوم وغرف</option><option>ريسبشن</option></select></div></div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px"><label>المساحة الإجمالية (م²)</label><input type="number" id="area-dup-total" readonly></div>
+      </div>
+
+      <!-- فيلا -->
+      <div id="sec-villa" class="hidden">
+        <div class="floor-panel">
+          <div class="fp-title">اختر الأدوار المتاحة وحدد مساحة كل دور</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <div class="chip" id="vfc-basement" onclick="toggleVF('basement',this)">بدروم</div>
+            <div class="chip active" id="vfc-ground" onclick="toggleVF('ground',this)">أرضي</div>
+            <div class="chip active" id="vfc-first" onclick="toggleVF('first',this)">أول</div>
+            <div class="chip" id="vfc-second" onclick="toggleVF('second',this)">ثاني</div>
+            <div class="chip" id="vfc-roof" onclick="toggleVF('roof',this)">روف</div>
+          </div>
+          <div id="villa-floors"></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label>المساحة الإجمالية (م²)</label><input type="number" id="area-villa-total" readonly></div>
+      </div>
+
+      <!-- مكتب إداري -->
+      <div id="sec-office" class="hidden">
+        <div class="floor-panel">
+          <div class="fp-title">تفاصيل الوحدة الإدارية</div>
+          <div class="fg c2" style="margin-bottom:12px">
+            <div class="field"><label>المساحة الإجمالية (م²)</label><input type="number" id="area-office" value="200" min="30"></div>
+            <div class="field"><label>عدد الأدوار</label><div class="sw"><select id="office-floors"><option value="1">دور واحد</option><option value="2">دورين</option><option value="3">٣ أدوار</option></select></div></div>
+          </div>
+          <div class="ctr-list">
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">مكاتب مغلقة / مديرين</span><span class="ctr-sub">غرف مكتبية مستقلة</span></div><div class="ctr"><button class="cbtn" onclick="chg('offices',-1)">−</button><span class="cval" id="offices-v">3</span><button class="cbtn" onclick="chg('offices',1)">+</button></div></div>
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">أوبن سبيس / ورك سبيس</span><span class="ctr-sub">مساحات العمل المفتوحة</span></div><div class="ctr"><button class="cbtn" onclick="chg('openspace',-1)">−</button><span class="cval" id="openspace-v">1</span><button class="cbtn" onclick="chg('openspace',1)">+</button></div></div>
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">غرف الاجتماعات</span><span class="ctr-sub">Conference rooms</span></div><div class="ctr"><button class="cbtn" onclick="chg('meetrooms',-1)">−</button><span class="cval" id="meetrooms-v">1</span><button class="cbtn" onclick="chg('meetrooms',1)">+</button></div></div>
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">الحمامات</span><span class="ctr-sub">حمامات الموظفين والزوار</span></div><div class="ctr"><button class="cbtn" onclick="chg('baths',-1)">−</button><span class="cval" id="off-baths-v">2</span><button class="cbtn" onclick="chg('baths',1)">+</button></div></div>
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">ريسبشن / استقبال</span><span class="ctr-sub">مناطق استقبال الزوار</span></div><div class="ctr"><button class="cbtn" onclick="chg('reception',-1)">−</button><span class="cval" id="reception-v">1</span><button class="cbtn" onclick="chg('reception',1)">+</button></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- تجاري -->
+      <div id="sec-commercial" class="hidden">
+        <div class="floor-panel">
+          <div class="fp-title">تفاصيل الوحدة التجارية</div>
+          <div class="fg c2" style="margin-bottom:12px">
+            <div class="field"><label>مساحة الصالة / المحل (م²)</label><input type="number" id="area-com" value="80" min="10"></div>
+            <div class="field"><label>نوع النشاط</label><div class="sw"><select id="com-type"><option value="retail">محل تجاري / ملابس / إلكترونيات</option><option value="cafe">كافيه / مطعم / فود</option><option value="showroom">شوروم / معرض</option><option value="pharmacy">صيدلية / عيادة</option></select></div></div>
+          </div>
+          <div class="ctr-list">
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">مطبخ / مطبخية</span><span class="ctr-sub">مساحة تحضير الطعام</span></div><div class="ctr"><button class="cbtn" onclick="chg('com_kitchen',-1)">−</button><span class="cval" id="com_kitchen-v">0</span><button class="cbtn" onclick="chg('com_kitchen',1)">+</button></div></div>
+            <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">الحمامات</span><span class="ctr-sub">للعملاء والموظفين</span></div><div class="ctr"><button class="cbtn" onclick="chg('com_bath',-1)">−</button><span class="cval" id="com_bath-v">1</span><button class="cbtn" onclick="chg('com_bath',1)">+</button></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- غرف السكني -->
+    <div class="card" id="res-rooms">
+      <div class="card-hd">
+        <div class="card-ic" style="background:#e1f5ee"><svg viewBox="0 0 24 24" fill="none" stroke="#1d9e75" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+        <div><div class="card-title">الغرف والمرافق</div><div class="card-desc">تؤثر على تفاصيل المقايسة والتكلفة النهائية</div></div>
+      </div>
+      <div class="ctr-list">
+        <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">غرف النوم</span><span class="ctr-sub">أرضيات وأبواب وتشطيب داخلي</span></div><div class="ctr"><button class="cbtn" onclick="chg('beds',-1)">−</button><span class="cval" id="beds-v">3</span><button class="cbtn" onclick="chg('beds',1)">+</button></div></div>
+        <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">الحمامات</span><span class="ctr-sub">سيراميك وأدوات صحية ومياه</span></div><div class="ctr"><button class="cbtn" onclick="chg('baths',-1)">−</button><span class="cval" id="baths-v">2</span><button class="cbtn" onclick="chg('baths',1)">+</button></div></div>
+        <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">المطابخ</span><span class="ctr-sub">وحدات ورخام وسباكة</span></div><div class="ctr"><button class="cbtn" onclick="chg('kitchens',-1)">−</button><span class="cval" id="kitchens-v">1</span><button class="cbtn" onclick="chg('kitchens',1)">+</button></div></div>
+        <div class="ctr-row"><div class="ctr-info"><span class="ctr-name">الصالات والريسبشن</span><span class="ctr-sub">فراغات المعيشة والاستقبال</span></div><div class="ctr"><button class="cbtn" onclick="chg('halls',-1)">−</button><span class="cval" id="halls-v">1</span><button class="cbtn" onclick="chg('halls',1)">+</button></div></div>
+      </div>
+    </div>
+
+    <!-- التصميم الداخلي -->
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-ic" style="background:#f3f0fe"><svg viewBox="0 0 24 24" fill="none" stroke="#7c6dd8" stroke-width="1.5"><path d="M2 13.5V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.5"/><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg></div>
+        <div><div class="card-title">الطراز والتصميم الداخلي</div><div class="card-desc">يحدد تعقيد التنفيذ ويؤثر مباشرة على التكلفة</div></div>
+      </div>
+      <div class="chip-group" id="style-chips">
+        <div class="chip active" onclick="selStyle('classic',this)">🏛 كلاسيك</div>
+        <div class="chip" onclick="selStyle('modern',this)">🔲 مودرن</div>
+        <div class="chip" onclick="selStyle('contemporary',this)">🌀 معاصر</div>
+        <div class="chip" onclick="selStyle('minimal',this)">◻️ مينيمال</div>
+        <div class="chip" onclick="selStyle('industrial',this)">⚙️ إندستريال</div>
+        <div class="chip gchip" onclick="selStyle('royal',this)">👑 نيوكلاسيك / روكوكو</div>
+      </div>
+      <div class="qdesc" id="style-desc">طراز كلاسيكي — تفاصيل متوسطة التعقيد، زخارف بسيطة، تكلفة تنفيذ عادية</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="goStep(2)">التالي — جودة التشطيب <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2 ══ -->
+  <div id="step2" class="hidden">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-ic" style="background:#fdf6e3"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div><div class="card-title">مستوى جودة التشطيب</div><div class="card-desc">٤ مستويات واضحة — من الاقتصادي إلى اللاكشري</div></div>
+      </div>
+      <div class="qgrid">
+        <div class="qcard" onclick="selQ('economy',this)"><span class="q-emoji">🧱</span><div class="q-name">اقتصادي</div><div class="q-range">٥٠٠٠ – ٦٠٠٠<br>جنيه / م²</div></div>
+        <div class="qcard active" onclick="selQ('standard',this)"><span class="q-emoji">🏠</span><div class="q-name">متوسط</div><div class="q-range">٨٠٠٠ – ١٠٠٠٠<br>جنيه / م²</div></div>
+        <div class="qcard" onclick="selQ('high',this)"><span class="q-emoji">✨</span><div class="q-name">فاخر</div><div class="q-range">١٥٠٠٠ – ١٨٠٠٠<br>جنيه / م²</div></div>
+        <div class="qcard" onclick="selQ('ultra',this)"><span class="q-emoji">👑</span><div class="q-name">Luxury</div><div class="q-range">٢٥٠٠٠+<br>جنيه / م²</div></div>
+      </div>
+      <div id="qdesc" class="qdesc">خامات محلية جيدة — بورسلان جراني ٦٠×٦٠، دهانات تيزيانو، نجارة MDF، أدوات صحية متوسطة، تمديدات نحاس</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-o" onclick="goStep(1)">السابق</button>
+      <button class="btn btn-p" onclick="goStep(3)">التالي — بنود الأعمال <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3 ══ -->
+  <div id="step3" class="hidden">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-ic" style="background:#e1f5ee"><svg viewBox="0 0 24 24" fill="none" stroke="#1d9e75" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div><div class="card-title">بنود الأعمال التنفيذية</div><div class="card-desc">بنود المقايسة الفعلية — فعّل ما ينطبق على مشروعك</div></div>
+      </div>
+
+      <div class="economy-note" id="economy-note">
+        <span style="font-size:16px">🔒</span>
+        <span>في الفئة الاقتصادية، بعض البنود المكلفة غير متاحة — اختر مستوى متوسط أو أعلى لتفعيلها</span>
+      </div>
+      <div class="ws-title">أعمال التجهيز والبنية التحتية</div>
+      <div class="wgrid">
+        <div class="wi active" onclick="togW(this,'demolition')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🔨</span><span class="wname">هدم وترحيل</span></div>
+        <div class="wi active" onclick="togW(this,'plaster')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🏗</span><span class="wname">بياض وجبس لاصق</span></div>
+        <div class="wi active" onclick="togW(this,'electrical')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">⚡</span><span class="wname">كهرباء</span></div>
+        <div class="wi active" onclick="togW(this,'plumbing')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🔧</span><span class="wname">سباكة ومياه</span></div>
+        <div class="wi" onclick="togW(this,'waterproof')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">💧</span><span class="wname">عزل مائي وحراري</span></div>
+      </div>
+
+      <div class="ws-title">أعمال الأرضيات والتجاليد</div>
+      <div class="wgrid">
+        <div class="wi active" onclick="togW(this,'floor_tiles')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🪵</span><span class="wname">تجليد أرضيات</span></div>
+        <div class="wi active" onclick="togW(this,'wall_tiles')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🧱</span><span class="wname">تجاليد حوائط</span></div>
+        <div class="wi" onclick="togW(this,'stone_cladding')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🪨</span><span class="wname">كلادينج حجر</span></div>
+        <div class="wi" onclick="togW(this,'parquet')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🌲</span><span class="wname">باركيه / فينيل</span></div>
+      </div>
+
+      <div class="ws-title">أعمال الدهانات والحوائط</div>
+      <div class="wgrid">
+        <div class="wi active" onclick="togW(this,'paint')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🎨</span><span class="wname">دهانات حوائط وأسقف</span></div>
+        <div class="wi" onclick="togW(this,'wallpaper')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🖼</span><span class="wname">ورق حائط / تابيتا</span></div>
+        <div class="wi" onclick="togW(this,'texture')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🌀</span><span class="wname">ميكرو سيمنت / ديكوري</span></div>
+      </div>
+
+      <div class="ws-title">أعمال الألوميتال والأبواب والنجارة</div>
+      <div class="wgrid">
+        <div class="wi active" onclick="togW(this,'doors')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🚪</span><span class="wname">أبواب داخلية</span></div>
+        <div class="wi active" onclick="togW(this,'aluminum')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🪟</span><span class="wname">ألوميتال (شبابيك/واجهة)</span></div>
+        <div class="wi" onclick="togW(this,'glass')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🔲</span><span class="wname">زجاج وجلاس</span></div>
+        <div class="wi" onclick="togW(this,'iron')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🔩</span><span class="wname">حديد (درابزين/بوابات)</span></div>
+      </div>
+
+      <div class="ws-title">المطبخ والحمامات</div>
+      <div class="wgrid">
+        <div class="wi active" onclick="togW(this,'kitchen_cab')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🍳</span><span class="wname">وحدات مطبخ ورخام</span></div>
+        <div class="wi active" onclick="togW(this,'bathrooms')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🚿</span><span class="wname">أدوات صحية</span></div>
+        <div class="wi" onclick="togW(this,'bath_acc')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🪥</span><span class="wname">إكسسوارات حمام</span></div>
+      </div>
+
+      <div class="ws-title">أعمال إضافية</div>
+      <div class="wgrid">
+        <div class="wi" onclick="togW(this,'ac')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">❄️</span><span class="wname">تكييف مركزي</span></div>
+        <div class="wi" onclick="togW(this,'smart')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">📱</span><span class="wname">منزل ذكي</span></div>
+        <div class="wi" onclick="togW(this,'outdoor')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🌿</span><span class="wname">تشطيب خارجي</span></div>
+        <div class="wi" onclick="togW(this,'pool')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🏊</span><span class="wname">حمام سباحة</span></div>
+        <div class="wi" onclick="togW(this,'elevator')"><div class="wchk"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div><span class="wicon">🛗</span><span class="wname">أسانسير داخلي</span></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-o" onclick="goStep(2)">السابق</button>
+      <button class="btn btn-g" onclick="goStep(4);calculate()">احسب التكلفة التقديرية <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4 ══ -->
+  <div id="step4" class="hidden">
+    <div id="result-area"></div>
+    <div class="lead-card">
+      <div class="lead-inner">
+        <div class="lead-hd">
+          <div class="lead-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.5 12.12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.41 1.5h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.5 16.18"/></svg></div>
+          <div><div class="lead-title">احصل على عرض سعر مجاني</div><div class="lead-sub">سيتواصل معك فريق iBuildity خلال ٢٤ ساعة لمناقشة مشروعك وتقديم مقايسة تفصيلية</div></div>
+        </div>
+        <div class="lead-benefits">
+          <div class="lead-ben"><div class="lead-dot"></div>استشارة مجانية</div>
+          <div class="lead-ben"><div class="lead-dot"></div>مقايسة تفصيلية</div>
+          <div class="lead-ben"><div class="lead-dot"></div>بدون التزام</div>
+        </div>
+        <div id="lead-fields">
+          <div class="lgrid2" style="margin-bottom:12px">
+            <div class="lfield"><label>الاسم الكريم <span class="lreq">*</span></label><input type="text" id="lead-name" placeholder="مثال: أحمد محمد"></div>
+            <div class="lfield"><label>رقم الهاتف <span class="lreq">*</span></label><input type="tel" id="lead-phone" placeholder="01xxxxxxxxx"></div>
+          </div>
+          <div class="lfield" style="margin-bottom:0"><label>البريد الإلكتروني <span style="color:rgba(255,255,255,.4);font-weight:400">(اختياري)</span></label><input type="email" id="lead-email" placeholder="example@email.com"></div>
+          <button class="btn-lead" id="lead-btn" onclick="submitLead()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> أرسل طلبك الآن</button>
+          <div class="lead-err" id="lead-err" style="display:none"></div>
+          <div class="lead-priv">🔒 بياناتك آمنة ولن تُشارك مع أي طرف ثالث</div>
+        </div>
+        <div id="lead-ok" style="display:none"><div class="lead-ok"><div class="lead-ok-icon">✅</div><div class="lead-ok-title">تم إرسال طلبك بنجاح!</div><div class="lead-ok-sub">شكراً — سيتواصل معك فريق iBuildity خلال ٢٤ ساعة على رقم هاتفك لتقديم عرض سعر تفصيلي مجاني.</div></div></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-o" onclick="goStep(3)">تعديل البيانات</button>
+      <button class="btn btn-p" onclick="resetCalc()">حساب جديد</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="fb">i<em>Build</em>ity</div>
+  حاسبة تكلفة التشطيب — أداة استرشادية مجانية<br>
+  الأسعار تقديرية وتختلف حسب السوق والمقاول وظروف التنفيذ
+</footer>
+
+<script>
+// ══ CONFIG ══
+const QUALITY={
+  economy:{basePerM:5500,desc:'خامات محلية اقتصادية — بورسلان عادي ٣٠×٣٠، دهانات بلاستيك، أبواب خشب زان، حنفيات وأدوات صحية محلية، أسلاك كهرباء بسيطة'},
+  standard:{basePerM:9000,desc:'خامات محلية جيدة — بورسلان جراني ٦٠×٦٠، دهانات تيزيانو أو روبكو، نجارة MDF، أدوات صحية متوسطة، تمديدات نحاس'},
+  high:{basePerM:16500,desc:'خامات مستوردة — بورسلان إيطالي ١٢٠×٦٠، دهانات جوتن أو بيتر، نجارة MDF عالية، أدوات IDEAL STANDARD أو ما يعادلها'},
+  ultra:{basePerM:28000,desc:'سوبر لاكشري — رخام مستورد نادر، دهانات Farrow & Ball، نجارة بأخشاب نادرة، أدوات Grohe/Villeroy، إضاءة Lutron، نظام KNX ذكي'}
+};
+const LOC_M={premium:1.4,high:1.18,mid:1.0,standard:0.82};
+const STATE_M={redbrick:1.18,bare:1.0,semi:0.72,old:0.90,partial:0.52};
+const STYLE_M={classic:1.0,modern:1.0,contemporary:1.06,minimal:0.88,industrial:0.92,royal:1.3};
+const UNIT_M={apartment:1.0,duplex:1.08,villa:1.15,studio:0.88,office:0.82,commercial:0.72};
+const STYLE_DESC={
+  classic:'طراز كلاسيكي — تفاصيل متوسطة التعقيد، زخارف بسيطة، تكلفة تنفيذ عادية',
+  modern:'طراز مودرن — خطوط نظيفة، أسطح ملساء، تكلفة تنفيذ متوسطة',
+  contemporary:'طراز معاصر — مزيج كلاسيك ومودرن، تفاصيل متوسطة إلى راقية (+٦٪)',
+  minimal:'طراز مينيمال — أقل تفاصيل، يوفر في التكلفة (−١٢٪)',
+  industrial:'طراز إندستريال — مواد خام ظاهرة، تشطيب خاص (−٨٪)',
+  royal:'طراز نيوكلاسيك / روكوكو — تفاصيل معقدة جداً، جبس مزخرف، تكلفة أعلى بـ ٣٠٪'
+};
+const WWT={
+  demolition:0.04,plaster:0.07,electrical:0.10,plumbing:0.08,waterproof:0.03,
+  floor_tiles:0.13,wall_tiles:0.08,stone_cladding:0.05,parquet:0.05,
+  paint:0.07,wallpaper:0.03,texture:0.04,
+  doors:0.06,aluminum:0.07,glass:0.03,iron:0.03,
+  kitchen_cab:0.13,bathrooms:0.10,bath_acc:0.02,
+  ac:0.07,smart:0.05,outdoor:0.05,pool:0.10,elevator:0.08
+};
+const WLB={
+  demolition:'هدم وترحيل',plaster:'بياض وجبس',electrical:'كهرباء',plumbing:'سباكة',waterproof:'عزل مائي',
+  floor_tiles:'تجليد أرضيات',wall_tiles:'تجاليد حوائط',stone_cladding:'كلادينج حجر',parquet:'باركيه/فينيل',
+  paint:'دهانات',wallpaper:'ورق حائط',texture:'ديكوري/ميكرو سيمنت',
+  doors:'أبواب داخلية',aluminum:'ألوميتال',glass:'زجاج وجلاس',iron:'أعمال حديد',
+  kitchen_cab:'وحدات مطبخ',bathrooms:'أدوات صحية',bath_acc:'إكسسوارات حمام',
+  ac:'تكييف مركزي',smart:'منزل ذكي',outdoor:'تشطيب خارجي',pool:'حمام سباحة',elevator:'أسانسير'
+};
+const WCLR=['#1a5f7a','#2d8bba','#c9a84c','#1d9e75','#7c6dd8','#e05a2b','#d4537e','#639922','#534ab7','#ba7517','#0f6e56','#378add','#888780','#b84c2b','#cc6622','#3a7acc','#77aa22','#cc4477','#5a3e9a','#a04020'];
+
+// ══ STATE ══
+const S={
+  beds:3,baths:2,kitchens:1,halls:1,
+  offices:3,openspace:1,meetrooms:1,reception:1,
+  com_kitchen:0,com_bath:1,
+  quality:'standard',style:'classic',
+  works:new Set(['demolition','plaster','electrical','plumbing','floor_tiles','wall_tiles','paint','doors','aluminum','kitchen_cab','bathrooms'])
+};
+const VF=new Set(['ground','first']);
+const VF_LABELS={basement:'بدروم',ground:'أرضي',first:'الأول',second:'الثاني',roof:'روف'};
+const VF_DEF={basement:150,ground:220,first:200,second:180,roof:120};
+const VF_ORDER=['basement','ground','first','second','roof'];
+
+// ══ UNIT CHANGE ══
+function onUnitChange(){
+  const t=document.getElementById('unit-type').value;
+  ['single','duplex','villa','office','commercial'].forEach(s=>document.getElementById('sec-'+s).classList.add('hidden'));
+  document.getElementById('res-rooms').classList.add('hidden');
+  if(t==='apartment'||t==='studio'){
+    document.getElementById('sec-single').classList.remove('hidden');
+    document.getElementById('res-rooms').classList.remove('hidden');
+  } else if(t==='duplex'){
+    document.getElementById('sec-duplex').classList.remove('hidden');
+    document.getElementById('res-rooms').classList.remove('hidden');
+    calcDup();
+  } else if(t==='villa'){
+    document.getElementById('sec-villa').classList.remove('hidden');
+    document.getElementById('res-rooms').classList.remove('hidden');
+    buildVF();
+  } else if(t==='office'){
+    document.getElementById('sec-office').classList.remove('hidden');
+  } else if(t==='commercial'){
+    document.getElementById('sec-commercial').classList.remove('hidden');
+  }
+}
+function calcDup(){
+  const a=(parseFloat(document.getElementById('d1a').value)||0)+(parseFloat(document.getElementById('d2a').value)||0);
+  document.getElementById('area-dup-total').value=a;
+}
+function toggleVF(f,el){
+  if(VF.has(f)){VF.delete(f);el.classList.remove('active');}
+  else{VF.add(f);el.classList.add('active');}
+  buildVF();
+}
+function buildVF(){
+  const c=document.getElementById('villa-floors');
+  c.innerHTML='';
+  VF_ORDER.forEach(f=>{
+    if(!VF.has(f))return;
+    const d=document.createElement('div');
+    d.style.marginBottom='12px';
+    d.innerHTML=`<div class="floor-badge">${VF_LABELS[f]}</div>
+      <div class="fg c2">
+        <div class="field"><label>المساحة (م²)</label><input type="number" id="vf-${f}" value="${VF_DEF[f]}" min="10" oninput="calcVT()"></div>
+        <div class="field"><label>الاستخدام</label><div class="sw"><select><option selected>مختلط</option><option>نوم وغرف</option><option>ريسبشن</option><option>خدمات</option><option>مساحة مفتوحة</option></select></div></div>
+      </div>`;
+    c.appendChild(d);
+    if([...VF_ORDER].filter(x=>VF.has(x)).indexOf(f)<VF.size-1){const dv=document.createElement('div');dv.className='fdivider';c.appendChild(dv);}
+  });
+  calcVT();
+}
+function calcVT(){
+  let t=0;
+  VF.forEach(f=>{const el=document.getElementById('vf-'+f);if(el)t+=parseFloat(el.value)||0;});
+  document.getElementById('area-villa-total').value=t;
+}
+function getArea(){
+  const t=document.getElementById('unit-type').value;
+  if(t==='duplex')return parseFloat(document.getElementById('area-dup-total').value)||300;
+  if(t==='villa')return parseFloat(document.getElementById('area-villa-total').value)||400;
+  if(t==='office')return parseFloat(document.getElementById('area-office').value)||200;
+  if(t==='commercial')return parseFloat(document.getElementById('area-com').value)||80;
+  return parseFloat(document.getElementById('area-single').value)||150;
+}
+
+// ══ COUNTERS ══
+function chg(k,d){
+  S[k]=Math.max(0,Math.min(20,(S[k]||0)+d));
+  const ids=[k+'-v',k+'-v2','off-'+k+'-v'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=S[k];});
+}
+
+// ══ QUALITY ══
+function selQ(key,el){
+  S.quality=key;
+  document.querySelectorAll('.qcard').forEach(c=>c.classList.remove('active','gold-a'));
+  el.classList.add(key==='ultra'?'gold-a':'active');
+  document.getElementById('qdesc').textContent=QUALITY[key].desc;
+  applyEconomyLock();
+}
+
+// ══ STYLE ══
+function selStyle(val,el){
+  S.style=val;
+  document.querySelectorAll('#style-chips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('style-desc').textContent=STYLE_DESC[val]||'';
+}
+
+// ══ WORKS ══
+function togW(el,key){
+  if(S.works.has(key)){S.works.delete(key);el.classList.remove('active');}
+  else{S.works.add(key);el.classList.add('active');}
+}
+
+// ══ STEPPER ══
+const PLBLS={1:'الخطوة ١ من ٤ — بيانات الوحدة',2:'الخطوة ٢ من ٤ — جودة التشطيب',3:'الخطوة ٣ من ٤ — بنود الأعمال',4:'الخطوة ٤ من ٤ — النتيجة التقديرية'};
+const PPCT={1:25,2:50,3:75,4:100};
+function goStep(n){
+  for(let i=1;i<=4;i++){
+    document.getElementById('step'+i).classList.toggle('hidden',i!==n);
+    const sn=document.getElementById('sn'+i);
+    sn.className='step-item'+(i===n?' active':(i<n?' done':''));
+  }
+  document.getElementById('prog').style.width=PPCT[n]+'%';
+  document.getElementById('prog-lbl').textContent=PLBLS[n];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══ CALCULATE ══
+function fmt(n){return Math.round(n).toLocaleString('ar-EG')}
+let lastEst='',lastSpecs='';
+function calculate(){
+  try {
+  const area=getArea();
+  const loc=document.getElementById('location').value;
+  const cs=document.getElementById('cur-state').value;
+  const ut=document.getElementById('unit-type').value;
+  let bpm=QUALITY[S.quality].basePerM;
+  bpm*=(LOC_M[loc]||1)*(STATE_M[cs]||1)*(STYLE_M[S.style]||1)*(UNIT_M[ut]||1);
+  let tw=0;
+  S.works.forEach(w=>{tw+=(WWT[w]||0);});
+  if(tw<0.01)tw=1;
+  let raw=bpm*area*tw;
+  if(S.works.has('bathrooms'))raw+=S.baths*bpm*3.5;
+  if(S.works.has('kitchen_cab'))raw+=S.kitchens*bpm*4.0;
+  raw+=(S.beds||0)*bpm*0.15;
+  const low=Math.round(raw*.87/1000)*1000;
+  const high=Math.round(raw*1.22/1000)*1000;
+  const mid=Math.round((low+high)/2);
+  const plm=Math.round(low/area),phm=Math.round(high/area);
+  const qL={economy:'اقتصادي',standard:'متوسط',high:'فاخر',ultra:'Luxury'};
+  const uL={apartment:'شقة',duplex:'دوبلكس',villa:'فيلا',studio:'ستوديو',office:'إداري',commercial:'تجاري'};
+  const locL={premium:'راقية جداً',high:'راقية',mid:'متوسطة',standard:'عادية'};
+  const csL={redbrick:'طوب أحمر',bare:'عظم',semi:'نصف تشطيب',old:'تشطيب قديم',partial:'جزئي'};
+  const stL={classic:'كلاسيك',modern:'مودرن',contemporary:'معاصر',minimal:'مينيمال',industrial:'إندستريال',royal:'نيوكلاسيك'};
+  lastEst=fmt(low)+' — '+fmt(high)+' جنيه';
+  lastSpecs=[uL[ut],fmt(area)+' م²','منطقة '+locL[loc],qL[S.quality],stL[S.style]].join(' | ');
+  const sw=Array.from(S.works).sort((a,b)=>(WWT[b]||0)-(WWT[a]||0));
+  // mxw removed
+  // PIE
+  const pie=buildPie(sw,tw,mid);
+  // bars removed
+  document.getElementById('result-area').innerHTML=`
+    <div class="result-hero">
+      <div class="ri">
+        <div class="rl">التكلفة التقديرية الإجمالية — iBuildity</div>
+        <div class="ra">${fmt(mid)} <span style="font-size:17px;opacity:.65">جنيه</span></div>
+        <div class="rs">متوسط النطاق التقديري</div>
+        <div class="rr">النطاق: ${fmt(low)} — ${fmt(high)} جنيه مصري</div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="mc"><div class="mv">${fmt(plm)}–${fmt(phm)}</div><div class="ml">جنيه / م² تقديري</div></div>
+      <div class="mc"><div class="mv">${fmt(area)} م²</div><div class="ml">المساحة الإجمالية</div></div>
+      <div class="mc"><div class="mv">${S.works.size}</div><div class="ml">بند أعمال</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="sec-title"><span class="sec-acc"></span>توزيع نسب بنود الأعمال</div>
+      ${pie}
+    </div>
+
+    <div class="spec-card">
+      <div class="sec-title"><span class="sec-acc"></span>ملخص المواصفات</div>
+      <div class="stags">
+        <span class="stag tb">${uL[ut]}</span><span class="stag tb">${fmt(area)} م²</span><span class="stag tb">منطقة ${locL[loc]}</span><span class="stag tb">${csL[cs]}</span>
+        <span class="stag ts">جودة ${qL[S.quality]}</span><span class="stag ts">طراز ${stL[S.style]}</span>
+        ${S.beds>0?'<span class="stag tg">'+S.beds+' غرف نوم</span>':''}${S.baths>0?'<span class="stag tg">'+S.baths+' حمامات</span>':''}${S.kitchens>0?'<span class="stag tg">'+S.kitchens+' مطابخ</span>':''}
+      </div>
+      <div class="note-box"><span style="font-size:16px;flex-shrink:0">⚠️</span><span>هذا التقدير <strong>استرشادي فقط</strong> من iBuildity ولا يُعد التزاماً. الأسعار تتأثر بأسعار الخامات وقت التنفيذ ومستوى المقاول وتفاصيل التصميم. يُنصح دائماً بأخذ <strong>٣ عروض سعر</strong> من مقاولين معتمدين.</span></div>
+    </div>`;
+  // reset lead
+  document.getElementById('lead-fields').style.display='block';
+  document.getElementById('lead-ok').style.display='none';
+  ['lead-name','lead-phone','lead-email'].forEach(id=>document.getElementById(id).value='');
+  const lb=document.getElementById('lead-btn');
+  if(lb){lb.disabled=false;lb.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> أرسل طلبك الآن';}
+  } catch(err) {
+    console.error('Calculate error:', err);
+    alert('حدث خطأ في الحساب: ' + err.message);
+  }
+}
+
+// ══ PIE ══
+function buildPie(works,tw,mid){
+  const R=90,CX=115,CY=115,SZ=240;
+  let slices='',legend='';
+  let ang=-Math.PI/2;
+  works.slice(0,9).forEach((w,i)=>{
+    const fr=(WWT[w]||0)/tw;
+    const ea=ang+fr*2*Math.PI;
+    const x1=CX+R*Math.cos(ang),y1=CY+R*Math.sin(ang);
+    const x2=CX+R*Math.cos(ea),y2=CY+R*Math.sin(ea);
+    const lg=fr*2*Math.PI>Math.PI?1:0;
+    const clr=WCLR[i%WCLR.length];
+    const pct=Math.round(fr*100);
+    slices+=`<path d="M${CX} ${CY} L${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${lg} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${clr}" stroke="white" stroke-width="1.5" opacity=".92"/>`;
+    if(pct>=5){const ma=ang+fr*Math.PI;const lx=CX+R*.75*Math.cos(ma),ly=CY+R*.75*Math.sin(ma);slices+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="9.5" font-weight="700" font-family="Cairo,sans-serif">${pct}%</text>`;}
+    ang=ea;
+    const wv=Math.round(fr*mid);
+    legend+=`<div class="leg-item"><div class="leg-dot" style="background:${clr}"></div><span class="leg-name">${WLB[w]}</span><span class="leg-amt">${fmt(wv)} ج</span><span class="leg-pct">${pct}%</span></div>`;
+  });
+  const hole=`<circle cx="${CX}" cy="${CY}" r="${R*.52}" fill="white"/>`;
+  const ct=`<text x="${CX}" y="${CY-7}" text-anchor="middle" font-size="13" font-weight="800" fill="#0f1923" font-family="Cairo,sans-serif">${works.length}</text><text x="${CX}" y="${CY+10}" text-anchor="middle" font-size="10" fill="#8a94a6" font-family="Cairo,sans-serif">بند</text>`;
+  return `<div class="chart-layout"><div class="pie-wrap"><svg width="${SZ}" height="${SZ}" viewBox="0 0 ${SZ} ${SZ}" style="max-width:240px">${slices}${hole}${ct}</svg></div><div class="pie-legend">${legend}</div></div>`;
+}
+
+// ══ LEAD ══
+async function submitLead(){
+  const name=document.getElementById('lead-name').value.trim();
+  const phone=document.getElementById('lead-phone').value.trim();
+  const email=document.getElementById('lead-email').value.trim();
+  const err=document.getElementById('lead-err');
+  const btn=document.getElementById('lead-btn');
+  err.style.display='none';
+  if(!name){showErr('من فضلك أدخل اسمك الكريم');return;}
+  if(!phone||phone.length<10){showErr('من فضلك أدخل رقم هاتف صحيح');return;}
+  btn.disabled=true;btn.textContent='جاري الإرسال...';
+  try{
+    const r=await fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,phone,email,estimate:lastEst,specs:lastSpecs})});
+    const d=await r.json();
+    if(r.ok&&d.success){document.getElementById('lead-fields').style.display='none';document.getElementById('lead-ok').style.display='block';}
+    else{showErr(d.error||'حدث خطأ، حاول مرة أخرى');btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> أرسل طلبك الآن';}
+  }catch(e){showErr('تعذّر الاتصال، تأكد من الإنترنت');btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> أرسل طلبك الآن';}
+}
+function showErr(m){const e=document.getElementById('lead-err');e.textContent='⚠️ '+m;e.style.display='block';}
+
+// ══ RESET ══
+function resetCalc(){
+  S.beds=3;S.baths=2;S.kitchens=1;S.halls=1;S.quality='standard';S.style='classic';
+  S.works=new Set(['demolition','plaster','electrical','plumbing','floor_tiles','wall_tiles','paint','doors','aluminum','kitchen_cab','bathrooms']);
+  ['beds-v','baths-v','kitchens-v','halls-v'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=id.includes('beds')?3:id.includes('baths')?2:id.includes('kitchens')?1:1;});
+  document.getElementById('unit-type').value='apartment';
+  document.getElementById('location').value='mid';
+  document.getElementById('cur-state').value='bare';
+  document.getElementById('area-single').value=150;
+  document.querySelectorAll('.qcard').forEach((c,i)=>{c.classList.remove('active','gold-a');if(i===1)c.classList.add('active');});
+  document.getElementById('qdesc').textContent=QUALITY.standard.desc;
+  document.querySelectorAll('#style-chips .chip').forEach((c,i)=>{c.classList.remove('active');if(i===0)c.classList.add('active');});
+  document.getElementById('style-desc').textContent=STYLE_DESC.classic;
+  document.querySelectorAll('.wi').forEach(el=>{
+    const m=el.getAttribute('onclick').match(/'([^']+)'\)/);
+    if(m){if(S.works.has(m[1]))el.classList.add('active');else el.classList.remove('active');}
+  });
+  document.getElementById('result-area').innerHTML='';
+  onUnitChange();
+  goStep(1);
+}
+
+
+// ══ ECONOMY LOCK ══
+const ECONOMY_LOCKED=['wall_tiles','stone_cladding','parquet','wallpaper','texture','aluminum','glass','iron','bath_acc','ac','smart','outdoor','pool','elevator'];
+
+function applyEconomyLock(){
+  const isEco = S.quality==='economy';
+  document.getElementById('economy-note').classList.toggle('visible', isEco);
+  document.querySelectorAll('.wi').forEach(el=>{
+    const m=el.getAttribute('onclick');
+    if(!m)return;
+    const km=m.match(/'([^']+)'\)/);
+    if(!km)return;
+    const key=km[1];
+    if(ECONOMY_LOCKED.includes(key)){
+      if(isEco){
+        el.classList.add('locked');
+        el.classList.remove('active');
+        S.works.delete(key);
+        el.onclick=null;
+        el.setAttribute('data-key',key);
+      } else {
+        el.classList.remove('locked');
+        const rk = el.getAttribute('data-key') || key;
+        el.setAttribute('onclick', "togW(this,'" + rk + "')");
+      }
+    }
+  });
+}
+
+// ══ INIT ══
+onUnitChange();
+buildVF();
+applyEconomyLock();
+</script>
+</body>
+</html>
